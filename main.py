@@ -13,6 +13,7 @@ sys.stdout.reconfigure(line_buffering=True) if hasattr(sys.stdout, 'reconfigure'
 from simple_storage import SimpleUserStorage, SimpleSessionStorage
 from clickup_client import ClickUpClient
 from task_detector import TaskDetector
+from omi_notifications import notify_task_created, notify_task_failed
 
 load_dotenv()
 
@@ -108,8 +109,13 @@ async def monitor_session_timeouts():
                                 
                                 if result and result.get("success"):
                                     print(f"⏰ SUCCESS! Task created in {list_name}", flush=True)
+                                    # Send notification to user
+                                    await notify_task_created(uid, task_name, list_name, due_date)
                                 else:
-                                    print(f"⏰ FAILED: {result.get('error') if result else 'Unknown'}", flush=True)
+                                    error_msg = result.get('error') if result else 'Unknown'
+                                    print(f"⏰ FAILED: {error_msg}", flush=True)
+                                    # Send failure notification
+                                    await notify_task_failed(uid, error_msg)
                             else:
                                 print(f"⏰ Insufficient content to create task", flush=True)
                             
@@ -892,11 +898,19 @@ async def process_segments(
             if result and result.get("success"):
                 SimpleSessionStorage.reset_session(session_id)
                 print(f"🎉 SUCCESS! Task created in {list_name}", flush=True)
+                # Send notification to user
+                uid = user.get("uid")
+                if uid:
+                    await notify_task_created(uid, task_name, list_name, due_date)
                 return f"✅ Task created in {list_name}: {task_name}"
             else:
                 error = result.get("error", "Unknown") if result else "Failed"
                 SimpleSessionStorage.reset_session(session_id)
                 print(f"❌ FAILED: {error}", flush=True)
+                # Send failure notification
+                uid = user.get("uid")
+                if uid:
+                    await notify_task_failed(uid, error)
                 return f"❌ Failed: {error}"
         
         # REAL MODE: Start collecting segments
@@ -985,11 +999,19 @@ async def process_segments(
             if result and result.get("success"):
                 SimpleSessionStorage.reset_session(session_id)
                 print(f"🎉 SUCCESS! Task created in {list_name}", flush=True)
+                # Send notification to user
+                uid = user.get("uid")
+                if uid:
+                    await notify_task_created(uid, task_name, list_name, due_date)
                 return f"✅ Task created in {list_name}: {task_name}"
             else:
                 error = result.get("error", "Unknown") if result else "Failed"
                 SimpleSessionStorage.reset_session(session_id)
                 print(f"❌ FAILED: {error}", flush=True)
+                # Send failure notification
+                uid = user.get("uid")
+                if uid:
+                    await notify_task_failed(uid, error)
                 return f"❌ Failed: {error}"
         else:
             # Still collecting (not at max yet)

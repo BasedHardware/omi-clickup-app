@@ -10,6 +10,7 @@ Voice-activated ClickUp task creation through OMI. Say trigger phrase + task det
 - **Smart collection**: collects 2-5 segments OR times out after 5s silence
 - **OAuth 2.0** authentication with persistent storage
 - **Mobile-first UI** for settings management
+- **OMI notifications**: instant confirmation when tasks are created
 
 ## Trigger & Timeout Mechanism
 
@@ -52,6 +53,10 @@ OAUTH_REDIRECT_URL=https://your-app-url.com/auth/callback
 
 # OpenAI for AI extraction
 OPENAI_API_KEY=your_openai_key
+
+# OMI API for notifications
+OMI_APP_ID=your_omi_app_id
+OMI_APP_SECRET=your_omi_app_secret
 
 # Server config
 APP_HOST=0.0.0.0
