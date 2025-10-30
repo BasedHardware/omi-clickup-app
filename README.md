@@ -1,380 +1,155 @@
-# ✅ ClickUp Voice Task Creator for OMI
+# ClickUp Voice Task Creator for OMI
 
-Voice-activated ClickUp task creation through your OMI device. Simply say "Create ClickUp task" followed by your task details, and AI will automatically create it in the right list!
+Voice-activated ClickUp task creation through OMI. Say trigger phrase + task details → AI creates task automatically.
 
-## ✨ Features
+## Capabilities
 
-- **🎤 Voice-Activated** - Say "Create ClickUp task" and speak naturally
-- **🧠 AI-Powered Task Extraction** - AI intelligently extracts task name, description, list, and priority
-- **🔐 OAuth Authentication** - Secure ClickUp OAuth 2.0 integration
-- **📋 List Selection** - Set a default list or specify in voice command
-- **⚙️ Flexible Settings** - Change lists anytime from mobile-first homepage
-- **🤖 Smart Extraction** - AI cleans up filler words and formats professionally
-- **🔕 Silent Collection** - Only notifies when task is created
-- **📱 Mobile-First UI** - Beautiful responsive ClickUp-themed design
+- **Voice-activated task creation** with 4 trigger phrases
+- **AI extraction**: task name, description, list (fuzzy match), priority, due date/time
+- **Timezone-aware** date parsing (13+ timezones)
+- **Smart collection**: collects 2-5 segments OR times out after 5s silence
+- **OAuth 2.0** authentication with persistent storage
+- **Mobile-first UI** for settings management
 
-## 🚀 Quick Start
+## Trigger & Timeout Mechanism
 
-### For OMI Users
+**Trigger phrases**: `create clickup task`, `create click up task`, `add clickup task`, `add click up task`
 
-1. **Install the app** in your OMI mobile app
-2. **Authenticate** your ClickUp workspace (one-time)
-3. **Select default list** (optional - you can specify in voice)
-4. **Start creating tasks!**
-   - Say: "Create ClickUp task fix login bug in bug tracker"
-   - Say: "Add ClickUp task called update documentation"
-   - Say: "Create ClickUp task review design mockups urgent priority"
+**Collection flow**:
+1. Detects trigger phrase → starts collecting transcripts
+2. Collects **2-5 segments max** OR **stops after 5+ second silence**
+3. Minimum 2 segments required (trigger + content)
+4. AI processes all segments together
+5. Single notification on completion
 
-### Trigger Phrases (4 options)
-
-- **"create clickup task"** - "Create ClickUp task fix the login page"
-- **"create click up task"** - "Create click up task update docs"
-- **"add click up task"** - "Add click up task review mockups"
-- **"add clickup task"** - "Add ClickUp task bug fix"
-
-### How It Works
-
-**The app intelligently processes your voice commands:**
-1. Detects trigger phrase → Starts collecting
-2. Collects up to 5 segments OR stops if 5+ second gap detected
-3. AI extracts:
-   - Task name/title
-   - Task description (if provided)
-   - List name (fuzzy matches to your workspace lists)
-   - Priority (urgent=1, high=2, normal=3, low=4)
-4. Fetches fresh list automatically
-5. Creates task in ClickUp
-6. Notifies you with confirmation! 🎉
-
-**Example:**
+**Example**:
 ```
-You: "Create ClickUp task fix login page not loading in bug tracker"
-     [collecting segment 1/5...]
-You: "users can't sign in properly high priority"
-     [collecting segment 2/5...]
-     [5+ second pause - timeout!]
-     → AI processes 2 segments
+You: "Create ClickUp task fix login bug by tomorrow 5pm"
+     [segment 1/5...]
+You: "users can't sign in high priority"
+     [segment 2/5...]
+     [5 second pause → processes 2 segments]
      
-AI Extracted:
-List: bug tracker
-Task: Fix login page not loading
-Description: Users can't sign in properly
-Priority: 2 (high)
-
-     → Task created! 🔔
+✅ Task created: "Fix login bug" (Priority: High, Due: Oct 31 5pm)
 ```
 
-## 🎯 OMI App Configuration
-
-| Field | Value |
-|-------|-------|
-| **Webhook URL** | `https://your-app.up.railway.app/webhook` |
-| **App Home URL** | `https://your-app.up.railway.app/` |
-| **Auth URL** | `https://your-app.up.railway.app/auth` |
-| **Setup Completed URL** | `https://your-app.up.railway.app/setup-completed` |
-
-## 🛠️ Development Setup
+## Replication Guide
 
 ### Prerequisites
-
 - Python 3.10+
-- ClickUp workspace with admin access
+- ClickUp workspace (admin access)
 - OpenAI API key
-- OMI device and app
+- Deployment platform (Railway/Heroku/etc)
 
-### Installation
+### 1. Environment Setup
 
-```bash
-# Clone the repository
-cd clickup
-
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your API keys
-```
-
-### Configuration
-
-Create `.env` file with:
-
+Create `.env` file:
 ```env
-# ClickUp OAuth Credentials (from app.clickup.com)
+# ClickUp OAuth (from app.clickup.com/settings/apps)
 CLICKUP_CLIENT_ID=your_client_id
 CLICKUP_CLIENT_SECRET=your_client_secret
+OAUTH_REDIRECT_URL=https://your-app-url.com/auth/callback
 
-# OAuth Redirect URL
-OAUTH_REDIRECT_URL=http://localhost:8000/auth/callback
-
-# OpenAI API Key (for AI task extraction)
+# OpenAI for AI extraction
 OPENAI_API_KEY=your_openai_key
 
-# App Settings
+# Server config
 APP_HOST=0.0.0.0
 APP_PORT=8000
 ```
 
-### ClickUp App Setup
+### 2. ClickUp OAuth App
 
 1. Go to [ClickUp Apps](https://app.clickup.com/settings/apps)
-2. Click "Create an App"
-3. Enter app name and details
-4. Set redirect URL: `http://localhost:8000/auth/callback`
-5. Copy Client ID and Client Secret to `.env`
-6. Save the app
+2. Create new app
+3. Set redirect URL: `https://your-app-url.com/auth/callback`
+4. Copy Client ID + Secret to `.env`
 
-### Run Locally
+### 3. Local Development
 
 ```bash
+python3 -m venv venv
 source venv/bin/activate
+pip install -r requirements.txt
 python main.py
 ```
 
-Visit `http://localhost:8000/test?dev=true` to test!
+Test at: `http://localhost:8000/test?dev=true`
 
-## ☁️ Railway Deployment
+### 4. Deploy to Railway
 
-### Quick Deploy
+```bash
+# Push to GitHub
+git init && git add . && git commit -m "Initial"
+git remote add origin <your-repo-url>
+git push -u origin main
 
-1. **Push to GitHub**
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git remote add origin https://github.com/YOUR_USERNAME/omi-clickup-app.git
-   git branch -M main
-   git push -u origin main
-   ```
-
-2. **Deploy on Railway**
-   - Go to [railway.app](https://railway.app)
-   - New Project → Deploy from GitHub
-   - Select your repo
-   - Add environment variables (from your `.env`)
-
-3. **Get your URL**
-   - Settings → Networking → Generate Domain
-   - You'll get: `your-app.up.railway.app`
-
-4. **Update OAuth Redirect**
-   - Railway Variables: `OAUTH_REDIRECT_URL=https://your-app.up.railway.app/auth/callback`
-   - ClickUp App: Update redirect URL to same
-
-5. **Configure OMI**
-   - Use your Railway URLs in OMI app settings
-
-### Railway Environment Variables
-
-Add these in Railway dashboard:
-
-```
-CLICKUP_CLIENT_ID=your_client_id
-CLICKUP_CLIENT_SECRET=your_client_secret
-OPENAI_API_KEY=your_openai_key
-OAUTH_REDIRECT_URL=https://your-app.up.railway.app/auth/callback
-APP_HOST=0.0.0.0
-APP_PORT=8000
-PYTHONUNBUFFERED=1
+# On Railway:
+# 1. New Project → Deploy from GitHub
+# 2. Add environment variables from .env
+# 3. Generate domain (Settings → Networking)
+# 4. Update OAUTH_REDIRECT_URL to Railway domain
 ```
 
-**Note**: `PYTHONUNBUFFERED=1` ensures instant log output (no buffering delays)
+### 5. Configure OMI App
 
-## 🧪 Testing
+In OMI Developer Settings:
 
-### Web Interface
+| Field | Value |
+|-------|-------|
+| Webhook URL | `https://your-app-url.com/webhook` |
+| App Home URL | `https://your-app-url.com/` |
+| Auth URL | `https://your-app-url.com/auth` |
+| Setup Completed URL | `https://your-app-url.com/setup-completed` |
 
-Visit `https://your-app.up.railway.app/test?dev=true` to:
-- Authenticate your ClickUp workspace
-- Test voice commands by typing
-- See real-time logs
-- Verify tasks are being created
+### 6. Usage
 
-### With OMI Device
+1. Install app in OMI mobile app
+2. Authenticate ClickUp workspace
+3. Set timezone in settings (optional: default list)
+4. Say: "Create ClickUp task fix bug by tomorrow high priority"
 
-1. Configure webhook URLs in OMI Developer Settings
-2. Enable the integration
-3. Authenticate ClickUp and select default list (optional)
-4. Say: "Create ClickUp task fix the bug!"
-5. Wait for AI processing (silent)
-6. Get notification with confirmation! 🎉
-
-## 🧠 AI Processing
-
-The app uses OpenAI for intelligent processing:
-
-1. **Task Name Extraction** - Extracts concise task title
-2. **Description Extraction** - Captures additional details
-3. **List Matching** - Fuzzy matches spoken list names to workspace lists
-4. **Priority Detection** - Identifies urgency from keywords
-5. **Cleanup** - Removes filler words, fixes grammar
-
-**Example Transformation:**
-
-```
-Input (2 segments):
-"fix the um login page bug in bug tracker it's like really urgent users can't sign in"
-
-AI Output:
-List: bug tracker (matched from "bug tracker")
-Task: Fix login page bug
-Description: Users can't sign in
-Priority: 1 (urgent)
-```
-
-## 📊 How Segments Work
-
-**OMI sends transcripts in segments** as you speak. The app:
-- ✅ Detects trigger phrase (Create/Add ClickUp task)
-- ✅ Collects up to 5 segments MAX
-- ✅ Processes early if 5+ second gap detected (minimum 2 segments)
-- ✅ Silent during collection (no spam)
-- ✅ AI processes all collected segments together
-- ✅ One notification on completion
-
-**Smart Collection:**
-- **Max segments:** 5 (including trigger)
-- **Timeout:** 5 seconds of silence → processes immediately
-- **Minimum:** 2 segments (trigger + content)
-- **Duration:** ~5-20 seconds depending on speech
-
-## 📱 List Management
-
-### Specifying List in Voice
-
-You can always specify the list in your voice command:
-- "Create task in **bug tracker** called fix login"
-- "Add task to **sprint planning** review mockups"
-- "Create task **update docs** in documentation list"
-
-AI will fuzzy match to your workspace lists!
-
-### Using Default List
-
-Set a default list in settings, then just say:
-- "Create ClickUp task fix the bug"
-- Task goes to your default list
-
-### Refreshing List
-
-The app caches your lists for performance. Click "Refresh Lists" button on homepage to update the cache.
-
-## 🎨 Priority Levels
-
-Mention priority in your voice command:
-- **Urgent** (1) - "urgent task" or "critical priority"
-- **High** (2) - "high priority" or "important"
-- **Normal** (3) - Default if not specified
-- **Low** (4) - "low priority" or "when you have time"
-
-## 🔐 Security & Privacy
-
-- ✅ OAuth 2.0 authentication (no password storage)
-- ✅ Tokens stored securely with file persistence
-- ✅ Per-user token isolation
-- ✅ HTTPS enforced in production
-- ✅ State parameter for CSRF protection
-
-## 🐛 Troubleshooting
-
-### "User not authenticated"
-- Complete ClickUp OAuth flow
-- Check Railway logs for auth errors
-- Re-authenticate if needed
-
-### "No list specified and no default list set"
-- Visit app homepage
-- Select a default list OR
-- Specify list in voice command
-
-### "Task not creating"
-- Check Railway logs for errors
-- Verify list exists and you have access
-- Ensure ClickUp app has correct permissions
-- Check ClickUp API rate limits
-
-### "List not found"
-- Check list name pronunciation
-- AI does fuzzy matching but might need clearer speech
-- Use "Refresh Lists" to update cache
-- Set as default list in settings
-
-### "Railway deployment fails"
-- Verify all environment variables are set
-- Check build logs for specific errors
-- Ensure `OAUTH_REDIRECT_URL` matches ClickUp app
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 clickup/
-├── main.py                  # FastAPI application with mobile-first UI
-├── clickup_client.py        # ClickUp API integration
-├── task_detector.py         # AI-powered task extraction
-├── simple_storage.py        # File-based storage (users & sessions)
-├── requirements.txt         # Python dependencies
-├── railway.toml            # Railway deployment config
-├── runtime.txt             # Python version
-├── Procfile                # Alternative deployment platforms
-├── .env.example            # Environment template
-├── .gitignore             # Git ignore rules
-├── LICENSE                # MIT License
-└── README.md              # This file
+├── main.py              # FastAPI app + UI + endpoints
+├── clickup_client.py    # ClickUp API wrapper
+├── task_detector.py     # AI task extraction (OpenAI)
+├── simple_storage.py    # File-based user storage
+├── requirements.txt     # Dependencies
+├── railway.toml         # Railway deployment config
+├── runtime.txt          # Python version
+└── Procfile            # Process config
 ```
 
-## 🔧 API Endpoints
+## Adapting for Other Integrations
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/` | GET | Homepage with list selection (mobile-first) |
-| `/auth` | GET | Start ClickUp OAuth flow |
-| `/auth/callback` | GET | OAuth callback handler |
-| `/setup-completed` | GET | Check if user authenticated |
-| `/webhook` | POST | Real-time transcript processor |
-| `/update-list` | POST | Update selected default list |
-| `/refresh-lists` | POST | Refresh list cache |
-| `/logout` | POST | Logout and clear data |
-| `/test` | GET | Web testing interface |
-| `/health` | GET | Health check |
+**Core pattern** (reusable):
+1. **Trigger detection** in webhook handler (`/webhook`)
+2. **Segment collection** with timeout tracking (`asyncio` background task)
+3. **AI extraction** using OpenAI with structured prompts
+4. **OAuth flow** (`/auth`, `/auth/callback`)
+5. **Settings UI** with storage persistence
 
-## 🤝 Contributing
+**To adapt**:
+- Replace `clickup_client.py` with target service API
+- Update AI prompt in `task_detector.py` for different data structure
+- Modify OAuth endpoints for service's auth flow
+- Adjust trigger phrases and collection logic as needed
 
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing`)
-5. Open a Pull Request
+## Key Dependencies
 
-## 📝 License
+```txt
+fastapi==0.104.1
+uvicorn==0.24.0
+openai==1.3.7
+httpx==0.25.2
+pytz==2023.3
+python-dotenv==1.0.0
+requests==2.31.0
+```
 
-MIT License - see [LICENSE](LICENSE) file for details.
+## License
 
-## 🆘 Support
-
-- **OMI Docs**: [docs.omi.me](https://docs.omi.me)
-- **ClickUp API**: [clickup.com/api](https://clickup.com/api)
-
-## 🎉 Credits
-
-Built for the [OMI](https://omi.me) ecosystem.
-
-- **OMI Team** - Amazing wearable AI platform
-- **ClickUp** - Productivity and task management platform
-- **OpenAI** - Intelligent text processing
-
----
-
-**Made with ❤️ for voice-first task management**
-
-**Features:**
-- 🎤 Voice-activated ClickUp task creation
-- 🧠 AI-powered task extraction and list matching
-- 📱 Mobile-first workspace management
-- 🔐 Secure ClickUp OAuth integration
-- ⚡ Real-time processing with Railway deployment
-
+MIT License
